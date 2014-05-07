@@ -16,7 +16,7 @@ public class ListRecipesAdapter extends ArrayAdapter<RecipeJB>{
 	public ListRecipesAdapter(Context context) {
 		  super(context, R.layout.row_layout);
 		  
-		  this.add(new RecipeJB(Long.valueOf(0),"chicken", "fry your chicken")); //$NON-NLS-1$ //$NON-NLS-2$  
+		  this.add(new RecipeJB(Long.valueOf(0),"chicken", "fry your chickens")); //$NON-NLS-1$ //$NON-NLS-2$  
 		  this.add(new RecipeJB(Long.valueOf(1),"melon", "slice your melon"));//$NON-NLS-1$ //$NON-NLS-2$ 
 		  this.add(new RecipeJB(Long.valueOf(2),"broccoli", "boil your broccoli"));//$NON-NLS-1$ //$NON-NLS-2$ 
 		  this.add(new RecipeJB(Long.valueOf(3),"cod", "roast your cod"));//$NON-NLS-1$ //$NON-NLS-2$ 
