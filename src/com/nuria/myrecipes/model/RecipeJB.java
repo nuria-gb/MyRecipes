@@ -2,6 +2,10 @@ package com.nuria.myrecipes.model;
 
 import java.io.Serializable;
 
+import com.nuria.myrecipes.database.RecipeTable;
+
+import android.content.ContentValues;
+
 public class RecipeJB implements Serializable{
 	private static final long serialVersionUID = 1L;
 	
@@ -18,6 +22,12 @@ public class RecipeJB implements Serializable{
 		this.id           = _id;
 		this.ingredients  = _ingredients;
 		this.directions   = _directions;
+	}
+	
+	public RecipeJB(RecipeJB _recipe) {
+		this.id           = _recipe.id;
+		this.ingredients  = _recipe.ingredients;
+		this.directions   = _recipe.directions;
 	}
 	
 	public Long getId() {
@@ -42,6 +52,14 @@ public class RecipeJB implements Serializable{
 	
 	public void setDirections(String directions_) {
 		this.directions = directions_;
+	}
+	
+	public ContentValues getContentValue() {
+		ContentValues mContentValue = new ContentValues();
+		mContentValue.put(RecipeTable.COLUMN_INGREDIENTS, this.ingredients);
+		mContentValue.put(RecipeTable.COLUMN_DIRECTIONS, this.directions);
+
+		return mContentValue;
 	}
 	
 	

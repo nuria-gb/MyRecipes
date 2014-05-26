@@ -1,110 +1,63 @@
 package com.nuria.myrecipes.activities;
 
 import android.app.ListActivity;
+import android.app.LoaderManager;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
-import android.util.SparseBooleanArray;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CursorAdapter;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 
 import com.nuria.myrecipes.R;
-import com.nuria.myrecipes.adapters.ListRecipesAdapter;
-import com.nuria.myrecipes.model.RecipeJB;
+import com.nuria.myrecipes.database.RecipeContentProvided;
+import com.nuria.myrecipes.database.RecipeTable;
 
 public class MainActivity extends ListActivity{
 
-	private final int RECIPE_ACTIVITY_CODE = 1;
 	
-//	private ActionMode currentActionMode;
-	public int selectedItem = -1;
-	
-	private ListRecipesAdapter listRecipeAdapter;
+	private SimpleCursorAdapter mSimpleCursorAdapter;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-		this.listRecipeAdapter = new ListRecipesAdapter(this);
 		
-		this.setListAdapter(this.listRecipeAdapter);
+		//I start a loader in order to load my data 
+		this.getLoaderManager().initLoader(0, null, new MyCursorLoader());
 		
+		this.mSimpleCursorAdapter = new SimpleCursorAdapter(this, 
+				                                            R.layout.row_layout, 
+				                                            null,//cursor, the callback will set the cursor up once it will be loaded 
+				                                            new String[] { 
+				  				                                  RecipeTable.COLUMN_INGREDIENTS, 
+				  				                                  RecipeTable.COLUMN_DIRECTIONS}, 
+				  				                            new int[] { 
+						  				                          R.id.tvRowIngredients, 
+						  				                          R.id.tvRowDirections}, 
+						  				                    CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);//I'm not sure of what this flag does.
+				
+		this.setListAdapter(this.mSimpleCursorAdapter);
 		getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
 		getListView().setMultiChoiceModeListener(new ModeCallback());
 		
-//		getListView().setOnItemLongClickListener(new OnItemLongClickListener() {
-//
-//			@Override
-//			public boolean onItemLongClick(AdapterView<?> parent, View view,
-//					int position, long id) {
-//				 
-//				if (MainActivity.this.currentActionMode != null) {
-//			          return false;
-//			        }
-//				 
-//				MainActivity.this.selectedItem = position;
-//				
-//				// start the CAB using the ActionMode.Callback defined above
-//				MainActivity.this.currentActionMode = MainActivity.this
-//		            .startActionMode(MainActivity.this.mActionModeCallback);
-//		        view.setSelected(true);
-//		        return true;
-//			}
-//			
-//		});
+
 	}
 	
-//	private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
-//
-//	    // called when the action mode is created; startActionMode() was called
-//	    public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-//	      // Inflate a menu resource providing context menu items
-//	      MenuInflater inflater = mode.getMenuInflater();
-//	      // assumes that you have "contexual.xml" menu resources
-//	      inflater.inflate(R.menu.rowselection, menu);
-//	      return true;
-//	    }
-//	    
-//	    // the following method is called each time 
-//	    // the action mode is shown. Always called after
-//	    // onCreateActionMode, but
-//	    // may be called multiple times if the mode is invalidated.
-//	    public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-//	      return false; // Return false if nothing is done
-//	    }
-//
-//	    // called when the user selects a contextual menu item
-//	    public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-//	      switch (item.getItemId()) {
-//	      case R.id.menubar_delete:
-//	        Toast.makeText(MainActivity.this, "delete", Toast.LENGTH_SHORT).show();
-//	        // the Action was executed, close the CAB
-//	        mode.finish();
-//	        return true;
-//	      default:
-//	        return false;
-//	      }
-//	    }
-//
-//	    // called when the user exits the action mode
-//	    public void onDestroyActionMode(ActionMode mode) {
-//	    	MainActivity.this.currentActionMode = null;
-//	    	MainActivity.this.selectedItem = -1;
-//	    }
-//	    
-//	  };
-	  
 	  
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
-		
 		return true;
 	}
 	
@@ -116,9 +69,7 @@ public class MainActivity extends ListActivity{
 		case R.id.menubar_new_recipe:
 			Toast.makeText(this, "new recipe", Toast.LENGTH_SHORT).show(); //$NON-NLS-1$
 			Intent intent = new Intent(this,RecipeActivity.class);
-//			this.startActivity(intent);
-//			intent.putExtra("Value1", "This value one for ActivityTwo ");
-			this.startActivityForResult(intent, this.RECIPE_ACTIVITY_CODE);
+			this.startActivity(intent);
 			break;
 		
 		default:
@@ -127,40 +78,51 @@ public class MainActivity extends ListActivity{
 		return true;
 	}
 	
-	//if I were using a cursorAdapter I had to have an _id field, this _id field
-	//will be passed as a parameter in here
 	@Override
 	 protected void onListItemClick(ListView l, View v, int position, long id){
-		Toast.makeText(this, "hola carabola: "+id, Toast.LENGTH_SHORT).show();
-		//TODO check currect action mode, if I am in CAB DO NOT GO to the detail
-		//retrieve recipe and send it to the edit recipe activity
-		RecipeJB recipe = this.listRecipeAdapter.getItem(position);
+		//TODO check correct action mode, if I am in CAB DO NOT GO to the detail
+		Uri uri = Uri.parse(RecipeContentProvided.CONTENT_URI + "/"           //$NON-NLS-1$
+		          + Long.toString(id));
 		
 		Intent intent = new Intent(this, RecipeActivity.class);
-		intent.putExtra(Intent.EXTRA_STREAM , recipe);
+		intent.putExtra(RecipeContentProvided.CONTENT_ITEM_TYPE, uri);
 
-		this.startActivityForResult(intent, this.RECIPE_ACTIVITY_CODE);
+		this.startActivity(intent);
 	}
 	
+	
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		
-		if(requestCode == this.RECIPE_ACTIVITY_CODE){
-			String operation = data.getStringExtra("com.nuria.myrecipes.activities.Mode");
-			RecipeJB recipe = (RecipeJB) data.getSerializableExtra("com.nuria.myrecipes.activities.Recipe");
+	protected void onPause() {
+		super.onPause();
+	}
+	
+	private class MyCursorLoader implements LoaderManager.LoaderCallbacks<Cursor>{
+
+		@Override
+		public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+			String[] projection = { RecipeTable.COLUMN_ID, 
+									RecipeTable.COLUMN_INGREDIENTS, 
+									RecipeTable.COLUMN_DIRECTIONS};
 			
-			if(operation.compareTo(RecipeActivity.CREATE_MODE)==0){
-				recipe.setId(new Long(this.listRecipeAdapter.getCount()));
-				this.listRecipeAdapter.add(recipe);
-				
-			} else {
-			 this.listRecipeAdapter.editRecipe(recipe);
-			}
-			
-			this.listRecipeAdapter.notifyDataSetChanged();
+		    CursorLoader cursorLoader = new CursorLoader(MainActivity.this,
+		                                        RecipeContentProvided.CONTENT_URI,
+		                                        projection, null, null, null);
+		    
+		    return cursorLoader;
+		}
+
+		@Override
+		public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+			MainActivity.this.mSimpleCursorAdapter.swapCursor(cursor);
 			
 		}
+
+		@Override
+		public void onLoaderReset(Loader<Cursor> loader) {
+			MainActivity.this.mSimpleCursorAdapter.swapCursor(null);
+			
+		}
+		
 	}
 	
 	private class ModeCallback implements ListView.MultiChoiceModeListener{
@@ -183,15 +145,12 @@ public class MainActivity extends ListActivity{
 			switch (item.getItemId()) {
             case R.id.menubar_delete:
                 
-                final SparseBooleanArray checkedItems = getListView().getCheckedItemPositions();
+                final long[] checkedItems = getListView().getCheckedItemIds();
                 final int numRecipesChecked = getListView().getCheckedItemCount();
                 
-                for (int i=0; i<checkedItems.size(); i++){
-                	if(checkedItems.valueAt(i)){
-	                	RecipeJB recipeRemove = MainActivity.this.listRecipeAdapter.getItem(i);
-	                	MainActivity.this.listRecipeAdapter.remove(recipeRemove);
-                	}
-                }
+                getContentResolver().delete(RecipeContentProvided.CONTENT_URI, 
+                		                    this.generateWhereClause(numRecipesChecked),
+                		                    this.castLongArrayToString(checkedItems, numRecipesChecked));
                 
                 Toast.makeText(MainActivity.this,numRecipesChecked + getString(R.string.deleted) , Toast.LENGTH_SHORT).show();
                 
@@ -203,6 +162,27 @@ public class MainActivity extends ListActivity{
                 break;
             }
             return true;
+		}
+		
+		//this method could be moved to an utility class 
+		private String[] castLongArrayToString(long[] array, int numItems) {
+			String[] idsStr = new String[numItems];
+			
+			for(int i=0; i<numItems; i++){
+				idsStr[i] = Long.toString(array[i]);
+			}
+			return idsStr;
+		}
+
+		private String generateWhereClause(int numItems) {
+			StringBuffer whereClause = new StringBuffer(RecipeTable.COLUMN_ID);
+			             whereClause.append(" in ("); //$NON-NLS-1$
+			for(int i=0; i<numItems; i++){
+				whereClause.append("?, "); //$NON-NLS-1$
+			}
+			whereClause.delete(whereClause.length()-2, whereClause.length());
+			whereClause.append(")"); //$NON-NLS-1$
+			return whereClause.toString();
 		}
 
 

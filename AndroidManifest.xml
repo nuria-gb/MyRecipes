@@ -34,6 +34,12 @@
 <!--        android:parentActivityName="MainActivity" 
             this indicates which is the parent activity, allowing the menu
             to return to it from Recipe activy-->
+            
+            <provider
+                android:authorities="com.nuria.myrecipes.recipe"
+                android:name="com.nuria.myrecipes.database.RecipeContentProvided"
+                android:exported="false">
+            </provider>
     </application>
 
 </manifest>

@@ -1,7 +1,9 @@
 package com.nuria.myrecipes.activities;
 
 import android.app.Activity;
-import android.content.Intent;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -10,6 +12,8 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.nuria.myrecipes.R;
+import com.nuria.myrecipes.database.RecipeContentProvided;
+import com.nuria.myrecipes.database.RecipeTable;
 import com.nuria.myrecipes.model.RecipeJB;
 
 public class RecipeActivity extends Activity{
@@ -29,12 +33,27 @@ public class RecipeActivity extends Activity{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.recipe_layout);
 		
-		this.recipe = (RecipeJB) getIntent().getSerializableExtra(Intent.EXTRA_STREAM);
-		this.mode= RecipeActivity.EDIT_MODE;
+		Bundle extras = getIntent().getExtras();
+		Uri recipeUri = extras==null ? null:
+			                   (Uri) extras
+				                   .getParcelable(RecipeContentProvided.CONTENT_ITEM_TYPE);
+		this.recipe = new RecipeJB();
+		this.mode= RecipeActivity.CREATE_MODE;
 		
-		if(this.recipe == null){
-			this.recipe = new RecipeJB();
-			this.mode= RecipeActivity.CREATE_MODE;
+		if(recipeUri != null){
+			this.mode= RecipeActivity.EDIT_MODE;
+			Cursor cursor = getContentResolver().query(recipeUri, 
+									                   new String[]{RecipeTable.COLUMN_ID, 
+									                                RecipeTable.COLUMN_INGREDIENTS,
+									                                RecipeTable.COLUMN_DIRECTIONS},
+							                           RecipeTable.COLUMN_ID+"=?", 
+							                           new String[]{recipeUri.getLastPathSegment()}, 
+							                          null);
+			if(cursor.moveToFirst()){
+				this.recipe.setId(Long.valueOf(cursor.getLong(cursor.getColumnIndexOrThrow(RecipeTable.COLUMN_ID))));
+				this.recipe.setIngredients(cursor.getString(cursor.getColumnIndexOrThrow(RecipeTable.COLUMN_INGREDIENTS)));
+				this.recipe.setDirections(cursor.getString(cursor.getColumnIndexOrThrow(RecipeTable.COLUMN_DIRECTIONS)));
+			}
 		}
 		
 		this.etIngredients = (EditText) findViewById(R.id.etRecipeIngredients);
@@ -50,10 +69,7 @@ public class RecipeActivity extends Activity{
 				//here we send the state of our recipe to the main Activity in order to save it
 				RecipeActivity.this.updateRecipeFieldFromView();
 				
-				Intent intent = new Intent();
-				intent.putExtra("com.nuria.myrecipes.activities.Recipe", RecipeActivity.this.recipe);
-				intent.putExtra("com.nuria.myrecipes.activities.Mode", RecipeActivity.this.mode);
-		        setResult(RESULT_OK, intent);
+				setResult(RESULT_OK);
 		        finish();
 			}
 		});
@@ -68,8 +84,17 @@ public class RecipeActivity extends Activity{
 	
 	
 	private void updateRecipeFieldFromView(){
-		this.recipe.setIngredients(this.etIngredients.getText().toString());
-		this.recipe.setDirections(this.etDirections.getText().toString());
+		ContentValues values = new ContentValues();
+		values.put(RecipeTable.COLUMN_INGREDIENTS, this.etIngredients.getText().toString());
+		values.put(RecipeTable.COLUMN_DIRECTIONS, this.etDirections.getText().toString());
+
+		if(this.mode == CREATE_MODE){
+			this.getContentResolver().insert(RecipeContentProvided.CONTENT_URI, values);
+		} else {
+			this.getContentResolver().update(RecipeContentProvided.CONTENT_URI, values, 
+					                         RecipeTable.COLUMN_ID+"=?",  //$NON-NLS-1$
+					                         new String[] {this.recipe.getId().toString()});
+		}
 	}
 	
 	//delete this method
