@@ -40,10 +40,10 @@ public class MainActivity extends ListActivity{
 				                                            R.layout.row_layout, 
 				                                            null,//cursor, the callback will set the cursor up once it will be loaded 
 				                                            new String[] { 
-				  				                                  RecipeTable.COLUMN_INGREDIENTS, 
+				  				                                  RecipeTable.COLUMN_NAME, 
 				  				                                  RecipeTable.COLUMN_DIRECTIONS}, 
 				  				                            new int[] { 
-						  				                          R.id.tvRowIngredients, 
+						  				                          R.id.tvRowName, 
 						  				                          R.id.tvRowDirections}, 
 						  				                    CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);//I'm not sure of what this flag does.
 				
@@ -101,7 +101,7 @@ public class MainActivity extends ListActivity{
 		@Override
 		public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 			String[] projection = { RecipeTable.COLUMN_ID, 
-									RecipeTable.COLUMN_INGREDIENTS, 
+									RecipeTable.COLUMN_NAME, 
 									RecipeTable.COLUMN_DIRECTIONS};
 			
 		    CursorLoader cursorLoader = new CursorLoader(MainActivity.this,

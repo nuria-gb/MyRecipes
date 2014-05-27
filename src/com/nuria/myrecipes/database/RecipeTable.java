@@ -7,6 +7,7 @@ public class RecipeTable {
 	// Database table
 	public static final String TABLE_RECIPE = "recipe";
 	public static final String COLUMN_ID = "_id";
+	public static final String COLUMN_NAME = "name";
 	public static final String COLUMN_INGREDIENTS = "ingredients";
 	public static final String COLUMN_DIRECTIONS = "directions";
 
@@ -14,8 +15,9 @@ public class RecipeTable {
 	private static final String DATABASE_CREATE_TABLE = 
 			"create table " + TABLE_RECIPE 
 			+ "(" + COLUMN_ID + " integer primary key autoincrement, "
-			+ COLUMN_INGREDIENTS + " text null, " + COLUMN_DIRECTIONS
-			+ " text null);";
+			+ COLUMN_INGREDIENTS + " text null, " 
+			+ COLUMN_DIRECTIONS  + " text null,"
+			+ COLUMN_NAME + " text null);";
 	
 	public static void onCreate(SQLiteDatabase database) {
 	    database.execSQL(DATABASE_CREATE_TABLE);
